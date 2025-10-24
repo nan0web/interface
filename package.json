@@ -1,7 +1,7 @@
 {
 	"name": "@nan0web/interface",
 	"version": "1.0.0",
-	"description": "Interface for apps",
+	"description": "The interface package provides a thin abstraction layer for building apps",
 	"main": "./src/index.js",
 	"type": "module",
 	"types": "./types/index.d.ts",

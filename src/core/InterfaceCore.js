@@ -1,35 +1,41 @@
 /**
  * @typedef {Object} InputMessage
- * @property {string|null} value - Ввід користувача
- * @property {boolean} waiting
- * @property {string[]} options
- * @property {number} time
- * @property {boolean} [escaped] - Скасовано?
+ * @property {string|null} value - User input value.
+ * @property {boolean} waiting - Indicates if waiting for further input.
+ * @property {string[]} options - Available options for the user.
+ * @property {number} time - Timestamp of the input.
+ * @property {boolean} [escaped] - true if the user signaled exit.
  */
 
 /**
  * @typedef {Object} OutputMessage
- * @property {string[]} content
- * @property {number} priority
- * @property {Object} meta
- * @property {Error|null} error
+ * @property {string[]} content - Lines of text to be displayed.
+ * @property {number} priority - Priority level (0 = normal, 10 = warning, 20 = critical).
+ * @property {Object} meta - Additional metadata.
+ * @property {Error|null} error - Optional error object.
  */
 
 /**
  * @typedef {Object} Interface
- * @property {() => Promise<InputMessage|null>} input - Запитання, що відбувається
- * @property {(msg: OutputMessage) => void} output - Повідомлення про дію
- * @property {() => boolean} ready - Чи можна працювати?
- * @property {() => void} stop - Скасування, не як «вихід», а як «я завершив»
+ * @property {() => Promise<InputMessage|null>} input - Retrieves user input.
+ * @property {(msg: OutputMessage) => void} output - Sends a message to the user.
+ * @property {() => boolean} ready - Returns true if the interface can operate.
+ * @property {() => void} stop - Terminates the interface.
  */
 
 /**
  * @typedef {Object} Protocol
- * @method {(input: InputMessage) => Promise<OutputMessage | null>} process
- * @method {(input: InputMessage) => boolean} accepts
+ * @property {(input: InputMessage) => Promise<OutputMessage|null>} process - Handles a matching input.
+ * @property {(input: InputMessage) => boolean} accepts - Determines if the protocol should handle the input.
  */
 
-class InterfaceCore {
+/**
+ * Core class that orchestrates input handling, protocol dispatch, and output emission.
+ *
+ * @class
+ * @param {Interface} implementation - The concrete interface implementation.
+ */
+export default class InterfaceCore {
 	/**
 	 * @param {Interface} implementation
 	 */
@@ -39,15 +45,16 @@ class InterfaceCore {
 	}
 
 	/**
-	 * Зареєструвати як дія, що приймається
-	 * @param {Protocol} protocol
+	 * Registers a protocol that can accept and process certain inputs.
+	 *
+	 * @param {Protocol} protocol - Protocol to register.
+	 * @throws {Error} If the protocol lacks required methods.
+	 * @returns {this}
 	 */
 	register(protocol) {
-		// Перевіряємо, що є `accepts`
 		if (typeof protocol.accepts !== 'function') {
 			throw new Error('Protocol must have .accepts(input)')
 		}
-		// Перевіряємо, що є `process`
 		if (typeof protocol.process !== 'function') {
 			throw new Error('Protocol must have .process(input)')
 		}
@@ -56,25 +63,44 @@ class InterfaceCore {
 		return this
 	}
 
+	/**
+	 * Delegates input retrieval to the underlying implementation.
+	 *
+	 * @returns {Promise<InputMessage|null>}
+	 */
 	async input() {
 		return this._impl.input()
 	}
 
+	/**
+	 * Delegates output emission to the underlying implementation.
+	 *
+	 * @param {OutputMessage} msg
+	 */
 	output(msg) {
 		return this._impl.output(msg)
 	}
 
+	/**
+	 * Checks if the underlying implementation is ready.
+	 *
+	 * @returns {boolean}
+	 */
 	ready() {
 		return this._impl.ready()
 	}
 
+	/**
+	 * Stops the underlying implementation.
+	 */
 	stop() {
 		return this._impl.stop()
 	}
 
 	/**
-	 * Головна дія: прийняти вхід, знайти протокол, повернути результат
-	 * @returns {Promise<'done' | 'idle'>}
+	 * Main processing step: obtains input, finds a matching protocol, and emits output.
+	 *
+	 * @returns {Promise<'done'|'idle'>} - 'done' when finished, 'idle' when ready for next step.
 	 */
 	async step() {
 		if (!this.ready()) return 'done'
@@ -106,7 +132,7 @@ class InterfaceCore {
 
 		if (!handled) {
 			this.output({
-				content: ['Не визначена дія.', '', 'Введіть команду, або "exit" для виходу.'],
+				content: ['Undefined action.', '', 'Enter a command, or "exit" to quit.'],
 				priority: 0,
 				meta: { type: 'help' },
 				error: null
@@ -117,7 +143,8 @@ class InterfaceCore {
 	}
 
 	/**
-	 * Почати цикл обробки
+	 * Runs a processing loop until the interface is no longer ready or a 'done' status is returned.
+	 *
 	 * @returns {Promise<void>}
 	 */
 	async loop() {
@@ -130,5 +157,3 @@ class InterfaceCore {
 		}
 	}
 }
-
-export default InterfaceCore
