@@ -1,0 +1,51 @@
+{
+	"name": "@nan0web/interface",
+	"version": "1.0.0",
+	"description": "Interface for apps",
+	"main": "./src/index.js",
+	"type": "module",
+	"types": "./types/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./src/index.js",
+			"types": "./types/index.d.ts"
+		},
+		"./cli": {
+			"import": "./src/cli/index.js",
+			"types": "./types/cli/index.d.ts"
+		},
+		"./core": {
+			"import": "./src/core/index.js",
+			"types": "./types/core/index.d.ts"
+		}
+	},
+	"scripts": {
+		"build": "tsc",
+		"test": "node --test \"src/**/*.test.js\"",
+		"test:coverage": "node --experimental-test-coverage --test-coverage-include=\"src/**/*.js\" --test-coverage-exclude=\"src/**/*.test.js\" --test \"src/**/*.test.js\"",
+		"test:coverage:collect": "nan0test coverage",
+		"test:docs": "node --test src/README.md.js",
+		"test:release": "node --test \"releases/**/*.test.js\"",
+		"test:status": "nan0test status --hide-name --debug",
+		"playground": "node playground/main.js",
+		"precommit": "npm test",
+		"prepush": "npm test",
+		"prepare": "husky",
+		"clean": "rm -rf .cache/ && rm -rf dist/",
+		"clean:modules": "rm -rf node_modules"
+	},
+	"keywords": [
+		"interface",
+		"ui",
+		"nan0web"
+	],
+	"author": "ЯRаСлав YaRaSLove <support@yaro.page>",
+	"license": "ISC",
+	"packageManager": "pnpm@10.11.0",
+	"devDependencies": {
+		"@nan0web/log": "^1.0.0",
+		"@nan0web/test": "^1.0.2",
+		"@nan0web/types": "^1.0.2",
+		"husky": "^9.1.7"
+	}
+}
